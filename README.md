@@ -40,11 +40,11 @@ Follow the `inference_tutorial.ipynb` tutorial [locally](https://github.com/face
 
 | Name      | IN1k Top 1 | Kinetics400 Top 1     | SUN RGBD Top 1     | Model   |
 | :---        |    :----   |          :--- | :--- |:--- |
-| Omnivore Swin T      | 80.4       | 78.2   |62.5   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinT_checkpoint.torch)   
-| Omnivore Swin S   | 82.7       | 81.5      |64.2  | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinS_checkpoint.torch)  |
-| Omnivore Swin B      | 83.8       | 82.8   |64.2   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinB_checkpoint.torch)   |
-| Omnivore Swin B (IN21k)   | 85.2       | 83.2      |65.5   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinB_In21k_checkpoint.torch)   |
-| Omnivore Swin L (IN21k)      | 85.6       | 83.4   |67.4   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinL_In21k_checkpoint.torch) |
+| Omnivore Swin T      | 81.2       | 78.9   |62.3   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinT_checkpoint.torch)   
+| Omnivore Swin S   | 83.4       | 82.2      |64.6  | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinS_checkpoint.torch)  |
+| Omnivore Swin B      | 84.0       | 83.3   |65.4   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinB_checkpoint.torch)   |
+| Omnivore Swin B (IN21k)   | 85.3       | 84.0      |67.2   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinB_In21k_checkpoint.torch)   |
+| Omnivore Swin L (IN21k)      | 86.0       | 84.1   |67.1   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinL_In21k_checkpoint.torch) |
 
 Numbers are based on Table 2. and Table 4. in the Omnivore Paper.
 
