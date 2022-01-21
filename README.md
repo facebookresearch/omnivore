@@ -71,7 +71,7 @@ If this work is helpful in your research, please consider starring :star: us and
 ```bibtex
 @article{girdhar2022omnivore,
   title={{Omnivore: A Single Model for Many Visual Modalities}},
-  author={Girdhar, Rohit and Singh, Mannat, and Ravi, Nikhila and van der Maaten, Laurens and Joulin, Armand and Misra, Ishan},
+  author={Girdhar, Rohit and Singh, Mannat and Ravi, Nikhila and van der Maaten, Laurens and Joulin, Armand and Misra, Ishan},
   journal={arXiv preprint arXiv:2201.08377},
   year={2022}
 }
