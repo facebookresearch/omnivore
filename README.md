@@ -1,5 +1,11 @@
 # Omnivore: A Single Model for Many Visual Modalities
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/omnivore-a-single-model-for-many-visual/action-recognition-on-epic-kitchens-100)](https://paperswithcode.com/sota/action-recognition-on-epic-kitchens-100?p=omnivore-a-single-model-for-many-visual)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/omnivore-a-single-model-for-many-visual/semantic-segmentation-on-nyu-depth-v2)](https://paperswithcode.com/sota/semantic-segmentation-on-nyu-depth-v2?p=omnivore-a-single-model-for-many-visual)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/omnivore-a-single-model-for-many-visual/scene-recognition-on-sun-rgbd)](https://paperswithcode.com/sota/scene-recognition-on-sun-rgbd?p=omnivore-a-single-model-for-many-visual)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/omnivore-a-single-model-for-many-visual/image-classification-on-inaturalist-2018)](https://paperswithcode.com/sota/image-classification-on-inaturalist-2018?p=omnivore-a-single-model-for-many-visual)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/omnivore-a-single-model-for-many-visual/action-recognition-in-videos-on-something)](https://paperswithcode.com/sota/action-recognition-in-videos-on-something?p=omnivore-a-single-model-for-many-visual)
+
 [[paper](https://arxiv.org/abs/2201.08377)][[website](https://facebookresearch.github.io/omnivore)]
 
 <p align="center">
