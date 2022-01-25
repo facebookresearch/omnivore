@@ -22,41 +22,38 @@ This repo contains the code to run inference with a pretrained model on an image
 
 ### Setup and Installation   
 
-```
+Omnivore requires PyTorch and torchvision, please follow PyTorch's getting started [instructions](https://pytorch.org/get-started/locally/) for installation. If you are using conda on a linux machine, you can follow the following instructions -
+
+```console
 conda create --name omnivore python=3.8
 conda activate omnivore
-conda install pytorch=1.9.0 torchvision=0.10.0 torchaudio=0.9.0 cudatoolkit=11.1 -c pytorch -c nvidia
-conda install -c conda-forge -c pytorch -c defaults apex
-conda install pytorchvideo
+conda install pytorch=1.9.0 torchvision=0.10.0 torchaudio=0.9.0 cudatoolkit=11.1 -c pytorch
 ```
 
-To run the notebook you may also need to install the follwing: 
-
+We also require `einops`, `pytorchvideo` and `timm` which can be installed via pip -
+```console
+pip install einops
+pip install pytorchvideo
+pip install timm
 ```
-conda install jupyter nb_conda ipykernel
-python -m ipykernel install --user --name omnivore
-```
-
-### Run Inference 
-
-Follow the `inference_tutorial.ipynb` tutorial [locally](https://github.com/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) or [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) for step by step instructions on how to run inference with an image, video and RGBD image.
 
 ## Model Zoo 
 
+We share checkpoints for all the Omnivore models in the paper. The models are available via [torch.hub](https://pytorch.org/docs/stable/hub.html), and we also share URLs to all the checkpoints.
+
+The details of the models, their torch.hub names / checkpoint links, and their performance is listed below.
 
 | Name      | IN1k Top 1 | Kinetics400 Top 1     | SUN RGBD Top 1     | Model   |
 | :---        |    :----   |          :--- | :--- |:--- |
-| Omnivore Swin T      | 81.2       | 78.9   |62.3   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinT_checkpoint.torch)   
-| Omnivore Swin S   | 83.4       | 82.2      |64.6  | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinS_checkpoint.torch)  |
-| Omnivore Swin B      | 84.0       | 83.3   |65.4   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinB_checkpoint.torch)   |
-| Omnivore Swin B (IN21k)   | 85.3       | 84.0      |67.2   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinB_In21k_checkpoint.torch)   |
-| Omnivore Swin L (IN21k)      | 86.0       | 84.1   |67.1   | [weights](https://dl.fbaipublicfiles.com/omnivore/models/swinL_In21k_checkpoint.torch) |
+| Omnivore Swin T      | 81.2       | 78.9   |62.3   | [omnivore_swinT](https://dl.fbaipublicfiles.com/omnivore/models/swinT_checkpoint.torch)   
+| Omnivore Swin S   | 83.4       | 82.2      |64.6  | [omnivore_swinS](https://dl.fbaipublicfiles.com/omnivore/models/swinS_checkpoint.torch)  |
+| Omnivore Swin B      | 84.0       | 83.3   |65.4   | [omnivore_swinB](https://dl.fbaipublicfiles.com/omnivore/models/swinB_checkpoint.torch)   |
+| Omnivore Swin B (IN21k)   | 85.3       | 84.0      |67.2   | [omnivore_swinB_imagenet21k](https://dl.fbaipublicfiles.com/omnivore/models/swinB_In21k_checkpoint.torch)   |
+| Omnivore Swin L (IN21k)      | 86.0       | 84.1   |67.1   | [omnivore_swinL_imagenet21k](https://dl.fbaipublicfiles.com/omnivore/models/swinL_In21k_checkpoint.torch) |
 
 Numbers are based on Table 2. and Table 4. in the Omnivore Paper.
 
-### Torch Hub 
-
-Models can be loaded via torch hub e.g. 
+The models can be loaded via torch.hub using the following command -
 
 ```
 model = torch.hub.load("facebookresearch/omnivore", model="omnivore_swinB")
@@ -68,6 +65,16 @@ The class mappings for the datasets can be downloaded as follows:
 wget https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json 
 wget https://dl.fbaipublicfiles.com/pyslowfast/dataset/class_names/kinetics_classnames.json 
 wget https://dl.fbaipublicfiles.com/omnivore/sunrgbd_classnames.json
+```
+
+### Run Inference 
+
+Follow the `inference_tutorial.ipynb` tutorial [locally](https://github.com/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) or [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) for step by step instructions on how to run inference with an image, video and RGBD image.
+
+To run the tutorial you need to install `jupyter notebook`. For installing it on conda, you may run the follwing:
+
+```
+conda install jupyter nb_conda ipykernel
 ```
 
 ## Citation
