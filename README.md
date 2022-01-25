@@ -74,7 +74,7 @@ Follow the `inference_tutorial.ipynb` tutorial [locally](https://github.com/face
 To run the tutorial you need to install `jupyter notebook`. For installing it on conda, you may run the follwing:
 
 ```
-conda install jupyter nb_conda ipykernel
+conda install jupyter nb_conda ipykernel ipywidgets
 ```
 
 ## Citation
