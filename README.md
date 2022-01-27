@@ -77,6 +77,8 @@ To run the tutorial you need to install `jupyter notebook`. For installing it on
 conda install jupyter nb_conda ipykernel ipywidgets
 ```
 
+Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/omnivore)
+
 ## Citation
 
 If this work is helpful in your research, please consider starring :star: us and citing:  
