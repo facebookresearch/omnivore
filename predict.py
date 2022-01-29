@@ -89,7 +89,7 @@ class Predictor(cog.Predictor):
         default=5,
         help="Choose top k predictions to return.",
     )
-    def predict(self, image, depth_map, model_name, topk):
+    def predict(self, image, model_name, topk):
         model = self.models[model_name]
         model.to(self.device)
         model.eval()
