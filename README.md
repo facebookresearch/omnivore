@@ -79,6 +79,9 @@ conda install jupyter nb_conda ipykernel ipywidgets
 
 Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/omnivore)
 
+Replicate web demo and docker image is available! You can try loading with different checkpoints here
+[![Replicate](https://replicate.com/facebookresearch/omnivore/badge)](https://replicate.com/facebookresearch/omnivore)
+
 ## Citation
 
 If this work is helpful in your research, please consider starring :star: us and citing:  
