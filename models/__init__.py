@@ -8,6 +8,7 @@
 
 from .omnivore_model import (
     omnivore_swinB,
+    omnivore_swinB_epic,
     omnivore_swinB_imagenet21k,
     omnivore_swinL_imagenet21k,
     omnivore_swinL_kinetics600,

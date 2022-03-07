@@ -10,6 +10,7 @@ dependencies = ["torch"]
 
 from models import (  # noqa: F401, E402
     omnivore_swinB,
+    omnivore_swinB_epic,
     omnivore_swinB_imagenet21k,
     omnivore_swinL_imagenet21k,
     omnivore_swinL_kinetics600,
