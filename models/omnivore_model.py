@@ -131,22 +131,15 @@ def _omnivore_base(
     return model
 
 def omnivore_swinB_epic(
-    pretrained: bool = True,
     progress: bool = True,
-    load_heads: bool = True,
     checkpoint_name: str = "omnivore_swinB_epic",
     **kwargs: Any,
 ) -> nn.Module:
     r"""
-    Omnivore model trunk: Swin B patch (2,4,4) window (1,6,7,7)
+    Omnivore swin B model trained on EPIC-KITCHENS-100 dataset
 
     Args:
-        pretrained: if True loads weights from model trained on
-            Imagenet 1k, Kinetics 400, SUN RGBD.
         progress: print progress of loading checkpoint
-        load_heads: if True, loads the 3 heads, one each for
-            image/video/rgbd prediction. If False loads only the
-            trunk.
  
     Returns:
         model: nn.Module of the omnivore model
@@ -160,8 +153,8 @@ def omnivore_swinB_epic(
         depths=[2, 2, 18, 2],
         num_heads=[4, 8, 16, 32],
         window_size=(16, 7, 7),
-        drop_path_rate=0.4,  # TODO: set this based on the final models
-        patch_norm=True,  # Make this the default value?
+        drop_path_rate=0.4,
+        patch_norm=True,
         **kwargs,
     )
 
@@ -174,8 +167,8 @@ def omnivore_swinB_epic(
         trunk=trunk,
         head_dim_in=1024,  # embed_dim * 8 = 128*8
         progress=progress,
-        pretrained=pretrained,
-        load_heads=load_heads,
+        pretrained=True,
+        load_heads=True,
         checkpoint_name=checkpoint_name,
         heads=heads
     )
