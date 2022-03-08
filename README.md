@@ -53,6 +53,10 @@ The details of the models, their torch.hub names / checkpoint links, and their p
 
 Numbers are based on Table 2. and Table 4. in the Omnivore Paper.
 
+We also provide a torch.hub model/checkpoint file for an Omnivore model fine tuned on the Epic Kitchens 100 dataset: [omnivore_swinB_epic](https://dl.fbaipublicfiles.com/omnivore/models/omnivore_swinB_epic.torch). 
+
+##### Usage
+
 The models can be loaded via torch.hub using the following command -
 
 ```
@@ -62,9 +66,17 @@ model = torch.hub.load("facebookresearch/omnivore", model="omnivore_swinB")
 The class mappings for the datasets can be downloaded as follows: 
 
 ```
+# Imagenet
 wget https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json 
+
+# Kinetics
 wget https://dl.fbaipublicfiles.com/pyslowfast/dataset/class_names/kinetics_classnames.json 
+
+# SUN RGBD
 wget https://dl.fbaipublicfiles.com/omnivore/sunrgbd_classnames.json
+
+# Epic Kitchens
+wget https://dl.fbaipublicfiles.com/omnivore/epic_action_classes.csv
 ```
 
 ### Run Inference 

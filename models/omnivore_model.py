@@ -47,24 +47,24 @@ class OmnivoreModel(nn.Module):
         self.trunk = trunk
         self.heads = heads
         self.types = ["image", "video", "rgbd"]
-        self.base_model = False
+        self.multimodal_model = False
         if isinstance(heads, nn.ModuleDict):
-            self.base_model = True
+            self.multimodal_model = True
             assert all([n in heads for n in self.types]), "All heads must be provided"
 
-    def forward(self, x: torch.Tensor, input_type: Optional[str] = "image"):
+    def forward(self, x: torch.Tensor, input_type: Optional[str] = None):
         """
         Args:
             x: input to the model of shape 1 x C x T x H x W
             input_type: Optional[str] one of ["image", "video", "rgbd"]
-                if the model is an omnivore base model 
+                if self.multimodal_model is True
         Returns:
             preds: tensor of shape (1, num_classes)
         """
         assert x.ndim == 5
         features = self.trunk(x)[0]
         head = self.heads
-        if self.base_model:
+        if self.multimodal_model:
             assert input_type in self.types, "unsupported input type"
             head = head[input_type]
         return head(features)
