@@ -79,6 +79,9 @@ wget https://dl.fbaipublicfiles.com/omnivore/sunrgbd_classnames.json
 wget https://dl.fbaipublicfiles.com/omnivore/epic_action_classes.csv
 ```
 
+The list of videos used for Kinetics-400 experiments can be found here: [training](http://dl.fbaipublicfiles.com/omnivore/kinetics400_lists/vidpaths_train.txt) and [validation](http://dl.fbaipublicfiles.com/omnivore/kinetics400_lists/vidpaths_val.txt).
+
+
 ### Run Inference 
 
 Follow the `inference_tutorial.ipynb` tutorial [locally](https://github.com/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) or [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) for step by step instructions on how to run inference with an image, video and RGBD image.
