@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -42,26 +42,32 @@ def get_kinetics_head(dim_in: int = 1024, num_classes: int = 400) -> nn.Module:
 
 
 class OmnivoreModel(nn.Module):
-    def __init__(self, trunk: nn.Module, heads: nn.ModuleDict):
+    def __init__(self, trunk: nn.Module, heads: Union[nn.ModuleDict, nn.Module]):
         super().__init__()
         self.trunk = trunk
         self.heads = heads
         self.types = ["image", "video", "rgbd"]
-        assert all([n in heads for n in self.types]), "All heads must be provided"
+        self.multimodal_model = False
+        if isinstance(heads, nn.ModuleDict):
+            self.multimodal_model = True
+            assert all([n in heads for n in self.types]), "All heads must be provided"
 
-    def forward(self, x: torch.Tensor, input_type: str = "image"):
+    def forward(self, x: torch.Tensor, input_type: Optional[str] = None):
         """
         Args:
             x: input to the model of shape 1 x C x T x H x W
-            input_type: str one of ["image", "video", "rgbd"]
+            input_type: Optional[str] one of ["image", "video", "rgbd"]
+                if self.multimodal_model is True
         Returns:
             preds: tensor of shape (1, num_classes)
         """
         assert x.ndim == 5
-        assert input_type in self.types, "unsupported input type"
-
         features = self.trunk(x)[0]
-        return self.heads[input_type](features)
+        head = self.heads
+        if self.multimodal_model:
+            assert input_type in self.types, "unsupported input type"
+            head = head[input_type]
+        return head(features)
 
 
 CHECKPOINT_PATHS = {
@@ -70,12 +76,13 @@ CHECKPOINT_PATHS = {
     "omnivore_swinB": "https://dl.fbaipublicfiles.com/omnivore/models/swinB_checkpoint.torch",
     "omnivore_swinB_in21k": "https://dl.fbaipublicfiles.com/omnivore/models/swinB_In21k_checkpoint.torch",
     "omnivore_swinL_in21k": "https://dl.fbaipublicfiles.com/omnivore/models/swinL_In21k_checkpoint.torch",
+    "omnivore_swinB_epic": "https://dl.fbaipublicfiles.com/omnivore/models/swinB_epic_checkpoint.torch",
 }
 
 
 def _omnivore_base(
     trunk: nn.Module,
-    heads: Optional[nn.ModuleDict] = None,
+    heads: Optional[Union[nn.Module, nn.ModuleDict]] = None,
     head_dim_in: int = 1024,
     pretrained: bool = True,
     progress: bool = True,
@@ -88,9 +95,17 @@ def _omnivore_base(
 
     Args:
         trunk: nn.Module of the SwinTransformer3D trunk
-    
+        heads: Provide the heads module if using a custom 
+            model. If not provided image/video/rgbd heads are
+            added corresponding to the omnivore base model.
+        head_dim_in: Only needs to be set if heads = None. 
+            The dim is used for the default base model heads. 
+        load_heads: if True, loads the 3 heads, one each for
+            image/video/rgbd prediction. If False loads only the
+            trunk.
+        
     Returns: 
-        model: nn.Module of the full omnivore model 
+        model: nn.Module of the full Omnivore model 
     """
     if load_heads and heads is None:
         # Get heads
@@ -115,6 +130,48 @@ def _omnivore_base(
 
     return model
 
+def omnivore_swinB_epic(
+    progress: bool = True,
+    checkpoint_name: str = "omnivore_swinB_epic",
+    **kwargs: Any,
+) -> nn.Module:
+    r"""
+    Omnivore swin B model trained on EPIC-KITCHENS-100 dataset
+
+    Args:
+        progress: print progress of loading checkpoint
+ 
+    Returns:
+        model: nn.Module of the omnivore model
+    """
+
+    # Only specify the non default values
+    trunk = SwinTransformer3D(
+        pretrained2d=False,
+        patch_size=(2, 4, 4),
+        embed_dim=128,
+        depths=[2, 2, 18, 2],
+        num_heads=[4, 8, 16, 32],
+        window_size=(16, 7, 7),
+        drop_path_rate=0.4,
+        patch_norm=True,
+        **kwargs,
+    )
+
+    heads = nn.Sequential(
+        nn.Dropout(p=0.5),
+        nn.Linear(in_features=1024, out_features=3806, bias=True)
+    )
+
+    return _omnivore_base(
+        trunk=trunk,
+        head_dim_in=1024,  # embed_dim * 8 = 128*8
+        progress=progress,
+        pretrained=True,
+        load_heads=True,
+        checkpoint_name=checkpoint_name,
+        heads=heads
+    )
 
 def omnivore_swinB(
     pretrained: bool = True,
