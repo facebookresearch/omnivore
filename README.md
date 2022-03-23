@@ -102,10 +102,10 @@ Replicate web demo and docker image is available! You can try loading with diffe
 If this work is helpful in your research, please consider starring :star: us and citing:  
 
 ```bibtex
-@article{girdhar2022omnivore,
+@inproceedings{girdhar2022omnivore,
   title={{Omnivore: A Single Model for Many Visual Modalities}},
   author={Girdhar, Rohit and Singh, Mannat and Ravi, Nikhila and van der Maaten, Laurens and Joulin, Armand and Misra, Ishan},
-  journal={arXiv preprint arXiv:2201.08377},
+  booktitle={CVPR},
   year={2022}
 }
 ```
