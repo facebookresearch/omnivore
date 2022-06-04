@@ -25,6 +25,12 @@ This repo contains the code to run inference with a pretrained model on an image
 Omnivore requires PyTorch and torchvision, please follow PyTorch's getting started [instructions](https://pytorch.org/get-started/locally/) for installation. If you are using conda on a linux machine, you can follow the following instructions -
 
 ```console
+pip install .
+```
+
+This will install the required dependencies for you. You can alternatively install the required dependencies manually:
+
+```console
 conda create --name omnivore python=3.8
 conda activate omnivore
 conda install pytorch=1.9.0 torchvision=0.10.0 torchaudio=0.9.0 cudatoolkit=11.1 -c pytorch
