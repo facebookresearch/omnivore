@@ -59,7 +59,7 @@ The details of the models, their torch.hub names / checkpoint links, and their p
 
 Numbers are based on Table 2. and Table 4. in the Omnivore Paper.
 
-We also provide a torch.hub model/checkpoint file for an Omnivore model fine tuned on the Epic Kitchens 100 dataset: [omnivore_swinB_epic](https://dl.fbaipublicfiles.com/omnivore/models/omnivore_swinB_epic_checkpoint.torch). 
+We also provide a torch.hub model/checkpoint file for an Omnivore model fine tuned on the Epic Kitchens 100 dataset: [omnivore_swinB_epic](https://dl.fbaipublicfiles.com/omnivore/models/swinB_epic_checkpoint.torch). 
 
 ##### Usage
 
