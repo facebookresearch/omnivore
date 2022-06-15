@@ -5,10 +5,13 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-# Code modified from https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py # NOQA
-# and https://github.com/facebookresearch/deit/blob/main/models.py by Matthew
-# Leavitt (ito@fb.com, matthew.l.leavitt@gmail.com) and Vedanuj Goswami
-# (vedanuj@fb.com).
+# Code modified from 
+# https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py ;
+# https://github.com/facebookresearch/deit/blob/main/models.py 
+# and https://github.com/facebookresearch/vissl/blob/main/vissl/models/trunks/vision_transformer.py
+# and is licensed under the license found in the
+# NOTICE file in the root directory of this source tree.
+
 
 # FIXME: DO NOT OPEN SOURCE THIS - we're missing proper attributions!
 
@@ -60,11 +63,8 @@ class PadIm2Video(torch.nn.Module):
     def forward(self, x):
         if x.ndim == 4:
             # B, C, H, W -> B, C, T, H, W
-            return x.unsqueeze(self.time_dim)
-        elif x.ndim == 5:
-            return x
-        else:
-            raise ValueError(f"Dimension incorrect {x.shape}")
+            x =  x.unsqueeze(self.time_dim)
+        
 
         if x.shape[self.time_dim] == 1:
             if self.pad_type == "repeat":
