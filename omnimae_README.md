@@ -12,7 +12,7 @@
 ## Model Zoo 
 
 We share checkpoints for the models in the OmniMAE paper. 
-Comming Soon (ViT-B, ViT-L, ViT-H checkpoints)
+**Coming Soon (ViT-B, ViT-L, ViT-H checkpoints)**
 
 
 ## Citation
