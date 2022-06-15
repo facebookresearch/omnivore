@@ -31,8 +31,6 @@ This repository contains PyTorch evaluation code, pretrained models for the foll
 </details>
 
 
-## Usage
-
 ### Setup and Installation   
 
 Omnivore requires PyTorch and torchvision, please follow PyTorch's getting started [instructions](https://pytorch.org/get-started/locally/) for installation. If you are using conda on a linux machine, you can follow the following instructions -
@@ -55,52 +53,6 @@ pip install einops
 pip install pytorchvideo
 pip install timm
 ```
-
-
-##### Usage
-
-The models can be loaded via torch.hub using the following command -
-
-```
-model = torch.hub.load("facebookresearch/omnivore", model="omnivore_swinB")
-```
-
-The class mappings for the datasets can be downloaded as follows: 
-
-```
-# Imagenet
-wget https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json 
-
-# Kinetics
-wget https://dl.fbaipublicfiles.com/pyslowfast/dataset/class_names/kinetics_classnames.json 
-
-# SUN RGBD
-wget https://dl.fbaipublicfiles.com/omnivore/sunrgbd_classnames.json
-
-# Epic Kitchens
-wget https://dl.fbaipublicfiles.com/omnivore/epic_action_classes.csv
-
-# SSv2
-wget TODO
-```
-
-The list of videos used for Kinetics-400 experiments can be found here: [training](http://dl.fbaipublicfiles.com/omnivore/kinetics400_lists/vidpaths_train.txt) and [validation](http://dl.fbaipublicfiles.com/omnivore/kinetics400_lists/vidpaths_val.txt).
-
-
-### Run Inference 
-
-Follow the `inference_tutorial.ipynb` tutorial [locally](https://github.com/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) or [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) for step by step instructions on how to run inference with an image, video and RGBD image.
-
-To run the tutorial you need to install `jupyter notebook`. For installing it on conda, you may run the follwing:
-
-```
-conda install jupyter nb_conda ipykernel ipywidgets
-```
-
-Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/omnivore)
-
-Replicate web demo and docker image is available! You can try loading with different checkpoints here
-[![Replicate](https://replicate.com/facebookresearch/omnivore/badge)](https://replicate.com/facebookresearch/omnivore)
 
 
 ## Contributing

@@ -63,6 +63,20 @@ wget https://dl.fbaipublicfiles.com/omnivore/epic_action_classes.csv
 The list of videos used for Kinetics-400 experiments can be found here: [training](http://dl.fbaipublicfiles.com/omnivore/kinetics400_lists/vidpaths_train.txt) and [validation](http://dl.fbaipublicfiles.com/omnivore/kinetics400_lists/vidpaths_val.txt).
 
 
+### Run Inference 
+
+Follow the `inference_tutorial.ipynb` tutorial [locally](https://github.com/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) or [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/omnivore/blob/main/inference_tutorial.ipynb) for step by step instructions on how to run inference with an image, video and RGBD image.
+
+To run the tutorial you need to install `jupyter notebook`. For installing it on conda, you may run the follwing:
+
+```
+conda install jupyter nb_conda ipykernel ipywidgets
+```
+
+Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/omnivore)
+
+Replicate web demo and docker image is available! You can try loading with different checkpoints here
+[![Replicate](https://replicate.com/facebookresearch/omnivore/badge)](https://replicate.com/facebookresearch/omnivore)
 
 ## Citation
 
@@ -76,3 +90,10 @@ If this work is helpful in your research, please consider starring :star: us and
   year={2022}
 }
 ```
+
+## Contributing
+We welcome your pull requests! Please see [CONTRIBUTING](CONTRIBUTING.md) and [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md) for more information.
+
+## License
+Omnivore is released under the CC-BY-NC 4.0 license. See [LICENSE](LICENSE) for additional details. However the Swin Transformer implementation is additionally licensed under the Apache 2.0 license (see [NOTICE](NOTICE) for additional details).
+
