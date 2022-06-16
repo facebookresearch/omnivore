@@ -3,7 +3,7 @@
 This repository contains PyTorch pretrained models, inference examples for the following papers:
 <details>
 <summary>
-  <a href="omnivore_README.md">Omnivore</a> A single vision model for many different visual modalities, CVPR 2022 [<b>bib</b>]
+  <a href="omnivore/README.md">Omnivore</a> A single vision model for many different visual modalities, CVPR 2022 [<b>bib</b>]
 </summary>
 
 ```
@@ -17,7 +17,7 @@ This repository contains PyTorch pretrained models, inference examples for the f
 </details>
 <details>
 <summary>
-<a href="omnimae_README.md">OmniMAE</a> Single Model Masked Pretraining on Images and Videos  [<b>bib</b>]
+<a href="omnimae/README.md">OmniMAE</a> Single Model Masked Pretraining on Images and Videos  [<b>bib</b>]
 </summary>
 
 ```
