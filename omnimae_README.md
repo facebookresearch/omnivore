@@ -1,4 +1,4 @@
-# Omnivore: A Single Model for Many Visual Modalities
+# OmniMAE: Single Model Masked Pretraining on Images and Videos
 
 [[paper](TODO)][[website](TODO)]
 
@@ -32,5 +32,5 @@ If this work is helpful in your research, please consider starring :star: us and
 We welcome your pull requests! Please see [CONTRIBUTING](CONTRIBUTING.md) and [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md) for more information.
 
 ## License
-Omnivore is released under the CC-BY-NC 4.0 license. See [LICENSE](LICENSE) for additional details. However the Swin Transformer implementation is additionally licensed under the Apache 2.0 license (see [NOTICE](NOTICE) for additional details).
+OmniMAE is released under the CC-BY-NC 4.0 license. See [LICENSE](LICENSE) for additional details. However the Swin Transformer implementation is additionally licensed under the Apache 2.0 license (see [NOTICE](NOTICE) for additional details).
 

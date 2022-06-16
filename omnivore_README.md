@@ -36,6 +36,30 @@ Numbers are based on Table 2. and Table 4. in the Omnivore Paper.
 
 We also provide a torch.hub model/checkpoint file for an Omnivore model fine tuned on the Epic Kitchens 100 dataset: [omnivore_swinB_epic](https://dl.fbaipublicfiles.com/omnivore/models/swinB_epic_checkpoint.torch). 
 
+
+### Setup and Installation   
+
+Omnivore requires PyTorch and torchvision, please follow PyTorch's getting started [instructions](https://pytorch.org/get-started/locally/) for installation. If you are using conda on a linux machine, you can follow the following instructions -
+
+```console
+pip install .
+```
+
+This will install the required dependencies for you. You can alternatively install the required dependencies manually:
+
+```console
+conda create --name omnivore python=3.8
+conda activate omnivore
+conda install pytorch=1.9.0 torchvision=0.10.0 torchaudio=0.9.0 cudatoolkit=11.1 -c pytorch
+```
+
+We also require `einops`, `pytorchvideo` and `timm` which can be installed via pip -
+```console
+pip install einops
+pip install pytorchvideo
+pip install timm
+```
+
 ##### Usage
 
 The models can be loaded via torch.hub using the following command -
