@@ -27,18 +27,18 @@ The models in this table are pretrained jointly pretrained on SSv2 and In1k for 
 
 | Name          | SSv2 (Top-1) | Model / Checkpoint |
 | :---          |    :----   |:--- |
-| OmniMAE ViT-B | 83.0       | [vit_base_mae_finetune_ssv2](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitb_ssv2_ft.torch) |
-| OmniMAE ViT-L | 85.1       | [vit_large_mae_finetune_ssv2](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitl_ssv2_ft.torch) |
-| OmniMAE ViT-H | 86.5       | [vit_huge_mae_finetune_ssv2](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vith_ssv2_ft.torch) |
+| OmniMAE ViT-B | 69.5       | [vit_base_mae_finetune_ssv2](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitb_ssv2_ft.torch) |
+| OmniMAE ViT-L | 74.2       | [vit_large_mae_finetune_ssv2](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitl_ssv2_ft.torch) |
+| OmniMAE ViT-H | 75.3       | [vit_huge_mae_finetune_ssv2](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vith_ssv2_ft.torch) |
 
 
 **Finetuned In1k checkpoints,**
 
 | Name          | IN1k (Top-1) | Model / Checkpoint |
 | :---          |    :----   |:--- |
-| OmniMAE ViT-B | 69.5      | [vit_base_mae_finetune_in1k](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitb_in1k_ft.torch) |
-| OmniMAE ViT-L | 74.2       | [vit_large_mae_finetune_in1k](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitl_in1k_ft.torch) |
-| OmniMAE ViT-H | 75.3       | [vit_huge_mae_finetune_in1k](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vith_in1k_ft.torch) |
+| OmniMAE ViT-B | 83.0       | [vit_base_mae_finetune_in1k](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitb_in1k_ft.torch) |
+| OmniMAE ViT-L | 85.1       | [vit_large_mae_finetune_in1k](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitl_in1k_ft.torch) |
+| OmniMAE ViT-H | 86.5       | [vit_huge_mae_finetune_in1k](https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vith_in1k_ft.torch) |
 
 ## Citation
 
