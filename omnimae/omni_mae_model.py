@@ -11,7 +11,7 @@ from functools import partial
 import torch
 import torch.nn as nn
 from timm.models.layers import trunc_normal_
-from vision_transformer import VisionTransformer, Attention, Decoder, PadIm2Video
+from omnimae.vision_transformer import VisionTransformer, Attention, Decoder, PadIm2Video
 
 
 def make_conv_or_linear(layer, init_weight=None, init_bias=None):
