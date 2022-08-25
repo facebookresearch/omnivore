@@ -4,8 +4,8 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="omnivore_fair",
-    version="1.1",
+    name="omnivore",
+    version="0.0",
     author="FAIR",
     url="https://github.com/facebookresearch/omnivore",
     install_requires=[

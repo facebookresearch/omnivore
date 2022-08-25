@@ -1,0 +1,69 @@
+# @package _global_
+
+defaults:
+  - /experiments/dataset_catalog.yaml
+  - _self_
+
+trainer:
+  _target_: omnivision.trainer.omnivision_trainer.OmnivisionTrainer
+  max_epochs: ???
+  mode: train
+  accelerator: cuda
+  seed_value: 123
+  val_epoch_freq: 1
+
+  logging:
+    tensorboard_writer:
+      _target_: omnivision.logger.make_tensorboard_logger
+      log_dir:  ${launcher.experiment_log_dir}/tensorboard
+      flush_secs: 120
+    log_dir: ${launcher.experiment_log_dir}/logs
+    log_freq: 10
+
+  distributed:
+   backend: nccl
+   comms_dtype: NULL # NULL, float16, bfloat16
+   find_unused_parameters: False
+
+  checkpoint:
+    save_dir: ${launcher.experiment_log_dir}/checkpoints
+    save_freq: 0 # 0 only last checkpoint is saved.
+    model_weight_initializer: NULL
+
+  limit_train_batches: NULL
+  limit_val_batches: NULL
+  env_variables: NULL
+
+  cuda:
+   # https://pytorch.org/docs/stable/backends.html
+   allow_tf32: False
+   cudnn_deterministic: False
+   cudnn_benchmark: True
+
+  data: ???
+  model: ???
+  optim:
+    gradient_clip: NULL
+    amp:
+      enabled: False
+      amp_dtype: float16 # bfloat16 or float16
+    optimizer: ???
+    options: ???
+
+  metrics: NULL
+  loss: NULL
+
+launcher:
+  gpus_per_node: ???
+  num_nodes: ???
+  experiment_log_dir: ???
+
+submitit:
+  name: "omnivision_omnivore"
+  timeout_hour: 72
+  cpus_per_task: 10
+  partition: "learnlab"
+  mem: "470GB"
+  constraints: "volta32gb"
+  use_cluster: True
+  port_range: [10000, 65000]

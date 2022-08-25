@@ -1,15 +1,11 @@
-#!/usr/bin/env python3
-# Portions Copyright (c) Meta Platforms, Inc. and affiliates.
+# Portions copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-# Code modified from
-# https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
-# and is licensed under the license found in the
-# NOTICE file in the root directory of this source tree.
-
+# Copied and modified from
+# https://raw.githubusercontent.com/SwinTransformer/Video-Swin-Transformer/master/mmaction/models/backbones/swin_transformer.py
 
 import logging
 from functools import lru_cache, reduce
@@ -22,16 +18,21 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from einops import rearrange
+from omnivision.utils.checkpoint import load_and_broadcast_checkpoint_list
 from timm.models.layers import DropPath, trunc_normal_
 
 
 class Im2Video(nn.Module):
     """Convert an image into a trivial video."""
 
+    def __init__(self, time_dim=2):
+        super().__init__()
+        self.time_dim = time_dim
+
     def forward(self, x):
         if x.ndim == 4:
             # B, C, H, W -> B, C, T, H, W
-            return x.unsqueeze(2)
+            return x.unsqueeze(self.time_dim)
         elif x.ndim == 5:
             return x
         else:
@@ -185,7 +186,7 @@ class WindowAttention3D(nn.Module):
         self.window_size = window_size  # Wd, Wh, Ww
         self.num_heads = num_heads
         head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or head_dim**-0.5
 
         # define a parameter table of relative position bias
         self.relative_position_bias_table = nn.Parameter(
@@ -407,13 +408,15 @@ class SwinTransformerBlock3D(nn.Module):
 
         shortcut = x
         if use_checkpoint:
-            x = checkpoint.checkpoint(self.forward_part1, x, mask_matrix)
+            x = checkpoint.checkpoint(
+                self.forward_part1, x, mask_matrix, use_reentrant=False
+            )
         else:
             x = self.forward_part1(x, mask_matrix)
         x = shortcut + self.drop_path(x)
 
         if use_checkpoint:
-            x = x + checkpoint.checkpoint(self.forward_part2, x)
+            x = x + checkpoint.checkpoint(self.forward_part2, x, use_reentrant=False)
         else:
             x = x + self.forward_part2(x)
 
@@ -851,7 +854,7 @@ class SwinTransformer3D(nn.Module):
         self.layers = nn.ModuleList()
         for i_layer in range(self.num_layers):
             layer = BasicLayer(
-                dim=int(embed_dim * 2 ** i_layer),
+                dim=int(embed_dim * 2**i_layer),
                 depth=depths[i_layer],
                 num_heads=num_heads[i_layer],
                 window_size=window_size,
@@ -900,7 +903,7 @@ class SwinTransformer3D(nn.Module):
             logger (logging.Logger): The logger used to print
                 debugging infomation.
         """
-        checkpoint = torch.load(self.pretrained, map_location=torch.device("cpu"))
+        checkpoint = load_and_broadcast_checkpoint_list(self.pretrained)
 
         if "classy_state_dict" in checkpoint:
             # checkpoints trained in omnivore
@@ -954,18 +957,23 @@ class SwinTransformer3D(nn.Module):
                 logger.warning(f"Error in loading {k}, passing")
             else:
                 if L1 != L2:
-                    S1 = int(L1 ** 0.5)
-                    relative_position_bias_table_pretrained_resized = torch.nn.functional.interpolate(
-                        relative_position_bias_table_pretrained.permute(1, 0).view(
-                            1, nH1, S1, S1
-                        ),
-                        size=(2 * self.window_size[1] - 1, 2 * self.window_size[2] - 1),
-                        mode="bicubic",
+                    S1 = int(L1**0.5)
+                    relative_position_bias_table_pretrained_resized = (
+                        torch.nn.functional.interpolate(
+                            relative_position_bias_table_pretrained.permute(1, 0).view(
+                                1, nH1, S1, S1
+                            ),
+                            size=(
+                                2 * self.window_size[1] - 1,
+                                2 * self.window_size[2] - 1,
+                            ),
+                            mode="bicubic",
+                        )
                     )
-                    relative_position_bias_table_pretrained = relative_position_bias_table_pretrained_resized.view(
-                        nH2, L2
-                    ).permute(
-                        1, 0
+                    relative_position_bias_table_pretrained = (
+                        relative_position_bias_table_pretrained_resized.view(
+                            nH2, L2
+                        ).permute(1, 0)
                     )
             state_dict[k] = relative_position_bias_table_pretrained.repeat(
                 2 * wd - 1, 1
@@ -977,7 +985,7 @@ class SwinTransformer3D(nn.Module):
         torch.cuda.empty_cache()
 
     def load_and_interpolate_3d_weights(self, logger):
-        checkpoint = torch.load(self.pretrained, map_location=torch.device("cpu"))
+        checkpoint = load_and_broadcast_checkpoint_list(self.pretrained)
         assert self.pretrained3d is not None and self.pretrained2d is False
 
         if "classy_state_dict" in checkpoint:
@@ -1031,16 +1039,23 @@ class SwinTransformer3D(nn.Module):
                         T1, S11, S12, nH1
                     )
                     pretrained_bias = pretrained_bias.permute(0, 3, 1, 2)
-                    relative_position_bias_table_pretrained_resized = torch.nn.functional.interpolate(
-                        pretrained_bias,
-                        size=(2 * self.window_size[1] - 1, 2 * self.window_size[2] - 1),
-                        mode="bicubic",
+                    relative_position_bias_table_pretrained_resized = (
+                        torch.nn.functional.interpolate(
+                            pretrained_bias,
+                            size=(
+                                2 * self.window_size[1] - 1,
+                                2 * self.window_size[2] - 1,
+                            ),
+                            mode="bicubic",
+                        )
                     )
-                    relative_position_bias_table_pretrained_resized = relative_position_bias_table_pretrained_resized.permute(
-                        0, 2, 3, 1
+                    relative_position_bias_table_pretrained_resized = (
+                        relative_position_bias_table_pretrained_resized.permute(
+                            0, 2, 3, 1
+                        )
                     )
-                    relative_position_bias_table_pretrained = relative_position_bias_table_pretrained_resized.reshape(
-                        L2, nH2
+                    relative_position_bias_table_pretrained = (
+                        relative_position_bias_table_pretrained_resized.reshape(L2, nH2)
                     )
 
             state_dict[k] = relative_position_bias_table_pretrained
@@ -1084,10 +1099,14 @@ class SwinTransformer3D(nn.Module):
                     "Use VISSL loading for this. This code "
                     "is only for Swin inflation."
                 )
+                # # Directly load 3D model.
+                # load_checkpoint(self, self.pretrained, strict=False, logger=logger)
         elif self.pretrained is None:
             self.apply(_init_weights)
         else:
-            raise TypeError("pretrained must be a str or None")
+            raise TypeError(
+                f"pretrained must be a str or None but found: {type(self.pretrained)}"
+            )
 
     def _apply_norm(self, x):
         x = rearrange(x, "n c d h w -> n d h w c")
@@ -1170,7 +1189,7 @@ class SwinTransformer3D(nn.Module):
             # Mean over the spatiotemporal dimensions
             x = torch.mean(x, [-3, -2, -1])
 
-            return [x]
+            return x
 
     def train(self, mode=True):
         """Convert the model into training mode while keep layers freezed."""

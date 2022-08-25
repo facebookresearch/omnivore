@@ -1,6 +1,6 @@
 # OmniMAE: Single Model Masked Pretraining on Images and Videos
 
-[[paper](TODO)][[website](TODO)]
+[[paper](https://arxiv.org/pdf/2206.08356.pdf)]
 
 <p align="center">
   <img width='1000' src="./../.github/omnimae_approach.png"/>  

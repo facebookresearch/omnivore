@@ -13,15 +13,16 @@ wget https://dl.fbaipublicfiles.com/omnivore/sunrgbd_classnames.json
 import json
 from pathlib import Path
 
+import cog
+
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
+
+from models.omnivore_model import get_all_heads, OmnivoreModel
+from models.swin_transformer_3d import SwinTransformer3D
 from PIL import Image
 from transforms import DepthNorm
-import cog
-
-from models.omnivore_model import OmnivoreModel, get_all_heads
-from models.swin_transformer_3d import SwinTransformer3D
 
 CHECKPOINT_PATHS = {
     "omnivore_swinT": "checkpoints/swinT_checkpoint.torch",
@@ -39,10 +40,13 @@ class Predictor(cog.Predictor):
             "omnivore_swinT": omnivore_swinT(),
             "omnivore_swinS": omnivore_swinS(),
             "omnivore_swinB": omnivore_swinB(),
-            "omnivore_swinB_in21k": omnivore_swinB(checkpoint_name="omnivore_swinB_in21k"),
-            "omnivore_swinL_in21k": omnivore_swinL(checkpoint_name="omnivore_swinL_in21k")
+            "omnivore_swinB_in21k": omnivore_swinB(
+                checkpoint_name="omnivore_swinB_in21k"
+            ),
+            "omnivore_swinL_in21k": omnivore_swinL(
+                checkpoint_name="omnivore_swinL_in21k"
+            ),
         }
-
 
         with open("imagenet_class_index.json", "r") as f:
             imagenet_classnames = json.load(f)
@@ -71,7 +75,7 @@ class Predictor(cog.Predictor):
                 T.CenterCrop(224),
                 T.Normalize(
                     mean=[0.485, 0.456, 0.406, 0.0418],
-                    std=[0.229, 0.224, 0.225, 0.0295]
+                    std=[0.229, 0.224, 0.225, 0.0295],
                 ),
             ]
         )
@@ -85,7 +89,13 @@ class Predictor(cog.Predictor):
         "model_name",
         type=str,
         default="omnivore_swinB",
-        options=["omnivore_swinB", "omnivore_swinT", "omnivore_swinS", "omnivore_swinB_in21k", "omnivore_swinL_in21k"],
+        options=[
+            "omnivore_swinB",
+            "omnivore_swinT",
+            "omnivore_swinS",
+            "omnivore_swinB_in21k",
+            "omnivore_swinL_in21k",
+        ],
         help="Choose a model",
     )
     @cog.input(
@@ -113,7 +123,9 @@ class Predictor(cog.Predictor):
         prediction = F.softmax(prediction, dim=1)
         pred_classes = prediction.topk(k=5).indices
 
-        pred_class_names = [self.imagenet_id_to_classname[str(i.item())] for i in pred_classes[0]]
+        pred_class_names = [
+            self.imagenet_id_to_classname[str(i.item())] for i in pred_classes[0]
+        ]
         return f"Top {topk} predicted labels: %s" % ", ".join(pred_class_names)
 
 
@@ -162,7 +174,7 @@ def omnivore_swinS():
         window_size=(8, 7, 7),
         drop_path_rate=0.3,
         patch_norm=True,
-        depth_mode="summed_rgb_d_tokens"
+        depth_mode="summed_rgb_d_tokens",
     )
 
     return omnivore_base(
@@ -183,7 +195,7 @@ def omnivore_swinT():
         window_size=(8, 7, 7),
         drop_path_rate=0.2,
         patch_norm=True,
-        depth_mode="summed_rgb_d_tokens"
+        depth_mode="summed_rgb_d_tokens",
     )
 
     return omnivore_base(

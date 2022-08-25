@@ -1,0 +1,24 @@
+optimizer:
+  _target_: torch.optim.SGD
+  momentum: 0.9
+  nesterov: True
+  lr: 0.00001
+options:
+      lr:
+        - scheduler:
+            _target_: fvcore.common.param_scheduler.ConstantParamScheduler
+            value: 0.2
+          param_names:
+            - 'fc1*'
+        - scheduler:
+            _target_: fvcore.common.param_scheduler.ConstantParamScheduler
+            value: 0.3
+          param_names:
+            - 'fc[2,3]*'
+
+      weight_decay:
+        - scheduler:
+            _target_: fvcore.common.param_scheduler.ConstantParamScheduler
+            value: 0.4
+          module_cls_names:
+            - 'torch.nn.modules.linear.Linear'
