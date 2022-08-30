@@ -1,4 +1,42 @@
-.ipynb_checkpoints
-__pycache__/
 *.json
 *.mp4
+*.DS_Store
+build/
+_ext
+*.pyc
+*.pyd
+*.so
+*.dll
+*.egg-info/
+**/__pycache__/
+*-checkpoint.ipynb
+.ipynb_checkpoints
+**/.ipynb_checkpoints
+**/.ipynb_checkpoints/**
+
+# hydra output directory
+outputs
+
+# Docusaurus site
+website/yarn.lock
+website/build/
+website/i18n/
+website/node_modules/*
+website/npm-debug.log
+
+## Generated for tutorials
+website/_tutorials/
+website/static/files/
+website/pages/tutorials/*
+!website/pages/tutorials/index.js
+
+
+## Conda and pip builds
+packaging/out/
+packaging/output_files/
+dist/
+wheels/
+
+.idea
+
+**/.vscode

@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
 
-from .swin_transformer_3d import SwinTransformer3D
+from omnivision.models.swin_transformer import SwinTransformer3D
 
 
 def get_all_heads(dim_in: int = 1024) -> nn.Module:
@@ -62,7 +62,7 @@ class OmnivoreModel(nn.Module):
             preds: tensor of shape (1, num_classes)
         """
         assert x.ndim == 5
-        features = self.trunk(x)[0]
+        features = self.trunk(x)
         head = self.heads
         if self.multimodal_model:
             assert input_type in self.types, "unsupported input type"
@@ -90,22 +90,22 @@ def _omnivore_base(
     checkpoint_name: str = "omnivore_swinB",
 ) -> nn.Module:
     """
-    Load and initialize the specified Omnivore 
-    model trunk (and optionally heads). 
+    Load and initialize the specified Omnivore
+    model trunk (and optionally heads).
 
     Args:
         trunk: nn.Module of the SwinTransformer3D trunk
-        heads: Provide the heads module if using a custom 
+        heads: Provide the heads module if using a custom
             model. If not provided image/video/rgbd heads are
             added corresponding to the omnivore base model.
-        head_dim_in: Only needs to be set if heads = None. 
-            The dim is used for the default base model heads. 
+        head_dim_in: Only needs to be set if heads = None.
+            The dim is used for the default base model heads.
         load_heads: if True, loads the 3 heads, one each for
             image/video/rgbd prediction. If False loads only the
             trunk.
-        
-    Returns: 
-        model: nn.Module of the full Omnivore model 
+
+    Returns:
+        model: nn.Module of the full Omnivore model
     """
     if load_heads and heads is None:
         # Get heads
@@ -130,6 +130,7 @@ def _omnivore_base(
 
     return model
 
+
 def omnivore_swinB_epic(
     progress: bool = True,
     checkpoint_name: str = "omnivore_swinB_epic",
@@ -140,7 +141,7 @@ def omnivore_swinB_epic(
 
     Args:
         progress: print progress of loading checkpoint
- 
+
     Returns:
         model: nn.Module of the omnivore model
     """
@@ -159,8 +160,7 @@ def omnivore_swinB_epic(
     )
 
     heads = nn.Sequential(
-        nn.Dropout(p=0.5),
-        nn.Linear(in_features=1024, out_features=3806, bias=True)
+        nn.Dropout(p=0.5), nn.Linear(in_features=1024, out_features=3806, bias=True)
     )
 
     return _omnivore_base(
@@ -170,8 +170,9 @@ def omnivore_swinB_epic(
         pretrained=True,
         load_heads=True,
         checkpoint_name=checkpoint_name,
-        heads=heads
+        heads=heads,
     )
+
 
 def omnivore_swinB(
     pretrained: bool = True,
@@ -190,7 +191,7 @@ def omnivore_swinB(
         load_heads: if True, loads the 3 heads, one each for
             image/video/rgbd prediction. If False loads only the
             trunk.
- 
+
     Returns:
         model: nn.Module of the omnivore model
     """
@@ -220,24 +221,24 @@ def omnivore_swinB(
 
 
 def omnivore_swinB_imagenet21k(
-    pretrained: bool = True, 
-    progress: bool = True, 
-    load_heads: bool = True, 
-    **kwargs: Any
+    pretrained: bool = True,
+    progress: bool = True,
+    load_heads: bool = True,
+    **kwargs: Any,
 ) -> nn.Module:
     r"""
-    Omnivore Swin B model pretrained on Imagenet 1k, Imagenet 21k, 
+    Omnivore Swin B model pretrained on Imagenet 1k, Imagenet 21k,
     Kinetics 400, SUN RGBD. By default the pretrained
-    weights will be loaded. 
+    weights will be loaded.
 
     Args:
         progress: print progress of loading checkpoint
         load_heads: if True, loads the 3 heads, one each for
             image/video/rgbd prediction. If False loads only the
             trunk.
-    
-    Returns: 
-        model: nn.Module of the omnivore model 
+
+    Returns:
+        model: nn.Module of the omnivore model
     """
 
     return omnivore_swinB(
@@ -265,8 +266,8 @@ def omnivore_swinS(
         load_heads: if True, loads the 3 heads, one each for
             image/video/rgbd prediction. If False loads only the
             trunk.
-    
-    Returns: 
+
+    Returns:
         model: nn.Module of the omnivore model
     """
 
@@ -302,7 +303,7 @@ def omnivore_swinT(
 ) -> nn.Module:
     r"""
     Omnivore model trunk: Swin T patch (2,4,4) window (8,7,7)
-    
+
     Args:
         pretrained: if True loads weights from model trained on
             Imagenet 1k, Kinetics 400, SUN RGBD.
@@ -310,8 +311,8 @@ def omnivore_swinT(
         load_heads: if True, loads the 3 heads, one each for
             image/video/rgbd prediction. If False loads only the
             trunk.
-    
-    Returns: 
+
+    Returns:
         model: nn.Module of the omnivore model
     """
 
@@ -358,7 +359,7 @@ def _omnivore_swinL(
             image/video/rgbd prediction. If False loads only the
             trunk.
 
-    Returns: 
+    Returns:
         model: nn.Module of the omnivore model
     """
 
@@ -396,10 +397,10 @@ def omnivore_swinL_imagenet21k(
     **kwargs: Any,
 ) -> nn.Module:
     r"""
-    Swin L patch 244 window 877 pretrained on Imagenet 1k, Imagenet 21k, 
+    Swin L patch 244 window 877 pretrained on Imagenet 1k, Imagenet 21k,
     Kinetics 400, SUN RGBD. By default the pretrained
-    weights will be loaded. 
-    
+    weights will be loaded.
+
     Args:
         pretrained: if True loads weights from model trained on
             Imagenet1k, Imagenet 21k, Kinetics 400, SUN RGBD.
@@ -407,8 +408,8 @@ def omnivore_swinL_imagenet21k(
         load_heads: if True, loads the 3 heads, one each for
             image/video/rgbd prediction. If False loads only the
             trunk.
-    
-    Returns: 
+
+    Returns:
         model: nn.Module of the omnivore model
     """
     return _omnivore_swinL(
@@ -428,7 +429,7 @@ def omnivore_swinL_kinetics600(
 ) -> nn.Module:
     r"""
     Swin L patch 244 window 877 trained with Kinetics 600
-    
+
     Args:
         pretrained: if True loads weights from model trained on
             Imagenet 1k, Kinetics 600, SUN RGBD.
@@ -436,8 +437,8 @@ def omnivore_swinL_kinetics600(
         load_heads: if True, loads the 3 heads, one each for
             image/video/rgbd prediction. If False loads only the
             trunk.
-    
-    Returns: 
+
+    Returns:
         model: nn.Module of the omnivore model
     """
 

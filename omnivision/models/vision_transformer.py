@@ -1,25 +1,20 @@
-#!/usr/bin/env python3
 # Portions Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-# Code modified from 
+# Code modified from
 # https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py ;
-# https://github.com/facebookresearch/deit/blob/main/models.py 
+# https://github.com/facebookresearch/deit/blob/main/models.py
 # and https://github.com/facebookresearch/vissl/blob/main/vissl/models/trunks/vision_transformer.py
 # and is licensed under the license found in the
 # NOTICE file in the root directory of this source tree.
 
 
-# FIXME: DO NOT OPEN SOURCE THIS - we're missing proper attributions!
-
-
-import copy
 import math
 from functools import partial
-from typing import List
+from typing import List, Optional
 
 import hydra
 import numpy as np
@@ -63,8 +58,7 @@ class PadIm2Video(torch.nn.Module):
     def forward(self, x):
         if x.ndim == 4:
             # B, C, H, W -> B, C, T, H, W
-            x =  x.unsqueeze(self.time_dim)
-        
+            x = x.unsqueeze(self.time_dim)
 
         if x.shape[self.time_dim] == 1:
             if self.pad_type == "repeat":
@@ -104,36 +98,6 @@ class Mlp(nn.Module):
         return x
 
 
-class Fp32LayerNorm(nn.LayerNorm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def forward(self, input):
-        output = nn.functional.layer_norm(
-            input.float(),
-            self.normalized_shape,
-            self.weight.float() if self.weight is not None else None,
-            self.bias.float() if self.bias is not None else None,
-            self.eps,
-        )
-        return output.type_as(input)
-
-
-class Fp32GroupNorm(nn.GroupNorm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def forward(self, input):
-        output = nn.functional.group_norm(
-            input.float(),
-            self.num_groups,
-            self.weight.float() if self.weight is not None else None,
-            self.bias.float() if self.bias is not None else None,
-            self.eps,
-        )
-        return output.type_as(input)
-
-
 class Attention(nn.Module):
     def __init__(
         self,
@@ -149,7 +113,7 @@ class Attention(nn.Module):
         head_dim = dim // num_heads
         # NOTE scale factor was wrong in my original version,
         # can set manually to be compat with prev weights
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or head_dim**-0.5
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop)
@@ -189,8 +153,6 @@ class Block(nn.Module):
         drop_path=0.0,
         act_layer=nn.GELU,
         norm_layer=nn.LayerNorm,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,  # from cait; possible values are None, "per_channel", "scalar"
         layer_scale_init_value=1e-4,  # from cait; float
     ):
@@ -215,16 +177,8 @@ class Block(nn.Module):
         )
         self.layer_scale_type = layer_scale_type
 
-        # LVViT non-skip. Can be thought of as a special case of layer_scale
-        if non_skip_wt_learnable is False:
-            self.non_skip_wt = non_skip_wt
-        else:
-            self.non_skip_wt = nn.Parameter((torch.ones(1) * non_skip_wt).squeeze())
-
         # Layerscale
         if self.layer_scale_type is not None:
-            # cannot use non_skip with this mode
-            assert non_skip_wt == 1.0 and non_skip_wt_learnable is False
             assert self.layer_scale_type in [
                 "per_channel",
                 "scalar",
@@ -247,8 +201,8 @@ class Block(nn.Module):
 
     def forward(self, x):
         if self.layer_scale_type is None:
-            x = x + self.drop_path(self.attn(self.norm1(x)) * self.non_skip_wt)
-            x = x + self.drop_path(self.mlp(self.norm2(x)) * self.non_skip_wt)
+            x = x + self.drop_path(self.attn(self.norm1(x)))
+            x = x + self.drop_path(self.mlp(self.norm2(x)))
         else:
             x = x + self.drop_path(self.attn(self.norm1(x)) * self.layer_scale_gamma1)
             x = x + self.drop_path(self.mlp(self.norm2(x)) * self.layer_scale_gamma2)
@@ -298,52 +252,6 @@ class PatchEmbed(nn.Module):
         self.proj = nn.Conv2d(
             in_chans, embed_dim, kernel_size=patch_size, stride=patch_size
         )
-
-    def forward(self, x):
-        x = self.proj(x).flatten(2).transpose(1, 2)
-        return x
-
-
-class PatchEmbedConv(nn.Module):
-    def __init__(self, conv_param_list, img_size=224, patch_size=16):
-        super().__init__()
-        img_size = to_2tuple(img_size)
-        patch_size = to_2tuple(patch_size)
-        self.patches_layout = (
-            1,
-            img_size[0] // patch_size[0],
-            img_size[1] // patch_size[1],
-        )
-        self.num_patches = np.prod(self.patches_layout)
-
-        layers = []
-        for idx, k in enumerate(conv_param_list):
-            conv = nn.Conv2d(
-                k["input_channels"],
-                k["output_channels"],
-                kernel_size=k["kernel_size"],
-                stride=k["stride"],
-                padding=k["padding"],
-                bias=k["bias"],
-            )
-            layers.append(conv)
-            if idx != len(conv_param_list) - 1:
-                if k["norm"] == "bn":
-                    norm = nn.BatchNorm2d(k["output_channels"])
-                    layers.append(norm)
-                elif k["norm"] == "lnfp32":
-                    norm = Fp32GroupNorm(1, k["output_channels"])
-                    layers.append(norm)
-                elif k["norm"] == "ln":
-                    norm = nn.GroupNorm(1, k["output_channels"])
-                    layers.append(norm)
-                if k["act"] == "relu":
-                    act = nn.ReLU(inplace=True)
-                    layers.append(act)
-                elif k["act"] == "gelu":
-                    act = nn.GELU()
-                    layers.append(act)
-        self.proj = nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.proj(x).flatten(2).transpose(1, 2)
@@ -402,12 +310,10 @@ class Decoder(nn.Module):
         drop_rate=0.0,
         attn_drop_rate=0.0,
         layer_norm_eps=1e-6,
-        non_skip_wt=1.0,
         return_interim_layers=False,
         share_pos_embed=False,
         learnable_pos_embed=True,
         init_pos_embed_random=False,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,  # from cait; possible values are None, "per_channel", "scalar"
         layer_scale_init_value=1e-4,  # from cait; float
         final_projection=None,
@@ -450,8 +356,6 @@ class Decoder(nn.Module):
                     drop=drop_rate,
                     drop_path=dpr[i],
                     norm_layer=norm_layer,
-                    non_skip_wt=non_skip_wt,
-                    non_skip_wt_learnable=non_skip_wt_learnable,
                     layer_scale_type=layer_scale_type,
                     layer_scale_init_value=layer_scale_init_value,
                 )
@@ -515,7 +419,7 @@ class Decoder(nn.Module):
         interim = []
         for i, blk in enumerate(self.decoder_blocks):
             if use_checkpoint:
-                x = checkpoint.checkpoint(blk, x)
+                x = checkpoint.checkpoint(blk, x, use_reentrant=False)
             else:
                 x = blk(x)
             if self.return_interim_layers or i == (len(self.decoder_blocks) - 1):
@@ -529,83 +433,6 @@ class Decoder(nn.Module):
         return interim[-1]
 
 
-class PosEmbedSumDecoder(Decoder):
-    def __init__(
-        self,
-        first_patch_idx,
-        patches_layout,
-        embed_dim,
-        share_pos_embed=False,
-        learnable_pos_embed=True,
-        init_pos_embed_random=False,
-    ):
-        super().__init__(
-            pos_sum_embed_only=True,
-            decoder_depth=-1,
-            attn_target=None,
-            first_patch_idx=first_patch_idx,
-            patches_layout=patches_layout,
-            embed_dim=embed_dim,
-            share_pos_embed=share_pos_embed,
-            learnable_pos_embed=learnable_pos_embed,
-            init_pos_embed_random=init_pos_embed_random,
-        )
-
-
-class TransformerBlocks(nn.Module):
-    def __init__(
-        self,
-        attn_target,
-        embed_dim,
-        num_blocks,
-        drop_path_rate=0.0,
-        mlp_ratio=4,
-        qkv_bias=True,
-        qk_scale=None,
-        drop_rate=0.0,
-        non_skip_wt=1.0,
-        attn_drop_rate=0.0,
-        layer_norm_eps=1e-6,
-        non_skip_wt_learnable=False,
-        layer_scale_type=None,
-        layer_scale_init_value=1e-4,
-    ):
-        super().__init__()
-        norm_layer = partial(nn.LayerNorm, eps=layer_norm_eps)
-        self.norm = norm_layer(embed_dim)
-
-        dpr = [
-            x.item() for x in torch.linspace(0, drop_path_rate, num_blocks)
-        ]  # stochastic depth decay rule
-
-        self.blocks = nn.ModuleList(
-            [
-                Block(
-                    dim=embed_dim,
-                    attn_target=attn_target,
-                    mlp_ratio=mlp_ratio,
-                    drop=drop_rate,
-                    drop_path=dpr[i],
-                    norm_layer=norm_layer,
-                    non_skip_wt=non_skip_wt,
-                    non_skip_wt_learnable=non_skip_wt_learnable,
-                    layer_scale_type=layer_scale_type,
-                    layer_scale_init_value=layer_scale_init_value,
-                )
-                for i in range(num_blocks)
-            ]
-        )
-
-    def forward(self, x, use_checkpoint=False):
-        for blk in self.blocks:
-            if use_checkpoint:
-                x = checkpoint.checkpoint(blk, x)
-            else:
-                x = blk(x)
-        x = self.norm(x)
-        return x
-
-
 class VisionTransformer(nn.Module):
     """
     Vision transformer. Adding stochastic depth makes it a DeiT.
@@ -613,44 +440,37 @@ class VisionTransformer(nn.Module):
 
     def __init__(
         self,
-        img_size,
-        patch_size,
-        in_chans,
-        embed_dim,
-        depth,
-        mlp_ratio,
-        attn_target,
-        drop_rate,
-        drop_path_rate,
-        drop_path_type,
-        force_cast_ln_fp32,
-        classifier_feature,
-        use_cls_token,
-        learnable_pos_embed,
-        non_skip_wt,
-        non_skip_wt_learnable,
-        layer_scale_type,
-        layer_scale_init_value,
-        patch_embed_type,
-        patch_embed_params_list,
+        img_size=224,
+        patch_size=16,
+        in_chans=3,
+        embed_dim=768,
+        depth=12,
+        mlp_ratio=4,
+        attn_target=None,
+        drop_rate=0.0,
+        drop_path_rate=0.1,
+        drop_path_type="progressive",
+        classifier_feature="cls_token",
+        use_cls_token=True,
+        learnable_pos_embed=True,
+        layer_scale_type=None,
+        layer_scale_init_value=1e-4,
+        patch_embed_type="linear",
+        patch_embed_params_list=None,
         layer_norm_eps=1e-6,
         masked_image_modeling=False,
-        patch_drop_min_patches=-1,
-        patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=False,
         post_encoder_params=None,
         decoder=None,
         mask_token_embed_dim=None,
+        patch_drop_max_patches=-1,
     ):
         super().__init__()
 
         assert use_cls_token or classifier_feature == "global_pool"
-        self.masked_image_modeling = masked_image_modeling
-        self.patch_drop_min_patches = patch_drop_min_patches
         self.patch_drop_max_patches = patch_drop_max_patches
-        self.patch_drop_at_eval = patch_drop_at_eval
+        self.masked_image_modeling = masked_image_modeling
 
         self.add_pos_same_dtype = add_pos_same_dtype
 
@@ -658,8 +478,6 @@ class VisionTransformer(nn.Module):
         self.patch_dropping = patch_dropping
 
         norm_layer = partial(nn.LayerNorm, eps=layer_norm_eps)
-        if force_cast_ln_fp32:
-            norm_layer = partial(Fp32LayerNorm, eps=layer_norm_eps)
 
         self.num_features = (
             self.embed_dim
@@ -676,13 +494,6 @@ class VisionTransformer(nn.Module):
                 patch_size=patch_size,
                 in_chans=in_chans,
                 embed_dim=embed_dim,
-            )
-
-        elif patch_embed_type == "conv":
-            self.patch_embed = PatchEmbedConv(
-                conv_param_list=patch_embed_params_list,
-                img_size=img_size,
-                patch_size=patch_size,
             )
 
         elif patch_embed_type == "generic":
@@ -731,8 +542,6 @@ class VisionTransformer(nn.Module):
                     drop=drop_rate,
                     drop_path=dpr[i],
                     norm_layer=norm_layer,
-                    non_skip_wt=non_skip_wt,
-                    non_skip_wt_learnable=non_skip_wt_learnable,
                     layer_scale_type=layer_scale_type,
                     layer_scale_init_value=layer_scale_init_value,
                 )
@@ -790,54 +599,13 @@ class VisionTransformer(nn.Module):
                 trunc_normal_(m.weight, std=0.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
                 nn.init.constant_(m.bias, 0)
-        elif isinstance(m, (nn.LayerNorm, Fp32LayerNorm)):
+        elif isinstance(m, (nn.LayerNorm)):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
     @torch.jit.ignore
     def no_weight_decay(self):
         return {"pos_embed", "cls_token"}
-
-    def patch_drop(self, x, npatch_per_img, patch_start_idx=1, npatch_to_keep=None):
-        """
-        Randomly drop patches from the input
-        Input:
-            - x: B x N x C
-        Returns:
-            - y: B x N' x C where N' is sampled from [self.patch_drop_min_patches, self.patch_drop_max_patches]
-        """
-        if (
-            self.patch_drop_min_patches < 0
-            or self.patch_drop_min_patches == npatch_per_img
-            or (npatch_to_keep is not None and npatch_to_keep < 0)
-        ):
-            return x
-
-        # typically we do not drop patches at test time.
-        # controlled by a flag `patch_drop_at_eval`
-        # we may want to drop patches in eval mode for self-supervised teachers
-        if self.training is False and self.patch_drop_at_eval is False:
-            return x
-
-        rnd_inds = [
-            torch.randperm(npatch_per_img, device=x.device) for _ in range(x.shape[0])
-        ]
-
-        if npatch_to_keep is None:
-            npatch_to_keep = torch.randint(
-                low=self.patch_drop_min_patches,
-                high=self.patch_drop_max_patches,
-                size=(1,),
-            ).item()
-        class_tokens = x[:, :patch_start_idx, ...]
-        patch_tokens = x[:, patch_start_idx:, ...]
-
-        patch_tokens = [
-            patch_tokens[i, rnd_inds[i][:npatch_to_keep]] for i in range(x.shape[0])
-        ]
-        patch_tokens = torch.stack(patch_tokens)
-        x = torch.cat([class_tokens, patch_tokens], dim=1)
-        return x
 
     def masked_patch_drop(self, x, mask):
         mask = mask.view(x.shape[0], -1)
@@ -896,13 +664,6 @@ class VisionTransformer(nn.Module):
 
         if self.patch_dropping and mask is not None:
             x = self.masked_patch_drop(x, mask)
-        else:
-            x = self.patch_drop(
-                x,
-                npatch_per_img,
-                patch_start_idx=self.first_patch_idx,
-                npatch_to_keep=npatch_to_keep,
-            )
         x = self.pos_drop(x)
         return x
 
@@ -934,7 +695,7 @@ class VisionTransformer(nn.Module):
 
         for blk in self.blocks:
             if use_checkpoint:
-                x = checkpoint.checkpoint(blk, x)
+                x = checkpoint.checkpoint(blk, x, use_reentrant=False)
             else:
                 x = blk(x)
 
@@ -985,7 +746,7 @@ class VisionTransformer(nn.Module):
         # get feature from every intermediate block and apply norm
         for blk in self.blocks:
             if use_checkpoint:
-                x = checkpoint.checkpoint(blk, x)
+                x = checkpoint.checkpoint(blk, x, use_reentrant=False)
             else:
                 x = blk(x)
             interms.append(self.norm(x))
@@ -1025,21 +786,14 @@ class VisionTransformer(nn.Module):
         x: torch.Tensor,
         out_feat_keys: List[str] = None,
         npatch_to_keep: int = None,
-        mask: torch.Tensor = None,
         use_checkpoint: bool = False,
+        mask: Optional[torch.Tensor] = None,
     ) -> List[torch.Tensor]:
+        assert (not self.masked_image_modeling) or (mask is not None)
         if out_feat_keys is None or len(out_feat_keys) == 0:
             x = self.forward_features(
                 x, npatch_to_keep, mask=mask, use_checkpoint=use_checkpoint
             )
-            if not isinstance(x, tuple):
-                x = x.unsqueeze(0)
-            else:
-                # This happens when forward_features returns a tuple with the
-                # cls_token and features in a tuple instead of concatenated together.
-                # This happens when there is a decoder which might decode the features
-                # into a different dimensionality than the encoder
-                x = [x]
         else:
             # we specified a feature layer name
             # Follow DINO (https://github.com/facebookresearch/dino/blob/main/eval_linear.py#L159)

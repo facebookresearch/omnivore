@@ -1,17 +1,38 @@
 #!/usr/bin/env python3
-# Portions Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-
+import logging
 from functools import partial
 
 import torch
 import torch.nn as nn
+
+from omnivision.models.vision_transformer import (
+    Attention,
+    Decoder,
+    PadIm2Video,
+    VisionTransformer,
+)
+
 from timm.models.layers import trunc_normal_
-from omnimae.vision_transformer import VisionTransformer, Attention, Decoder, PadIm2Video
+from torch.hub import load_state_dict_from_url
+
+
+CHECKPOINT_PATHS = {
+    "omnimae_vitB_pretrain": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitb_pretrain.torch",
+    "omnimae_vitB_ft_in1k": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitb_in1k_ft.torch",
+    "omnimae_vitB_ft_ssv2": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitb_ssv2_ft.torch",
+    "omnimae_vitL_pretrain": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitl_pretrain.torch",
+    "omnimae_vitL_ft_in1k": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitl_in1k_ft.torch",
+    "omnimae_vitL_ft_ssv2": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vitl_ssv2_ft.torch",
+    "omnimae_vitH_pretrain": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vith_pretrain.torch",
+    "omnimae_vitH_ft_in1k": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vith_in1k_ft.torch",
+    "omnimae_vitH_ft_ssv2": "https://dl.fbaipublicfiles.com/omnivore/omnimae_ckpts/vith_ssv2_ft.torch",
+}
 
 
 def make_conv_or_linear(layer, init_weight=None, init_bias=None):
@@ -37,13 +58,22 @@ class OmniMAE(nn.Module):
         # imgOrVideo: A tensor of shape [N,C,H,W] for images and [N,C,T,H,W] for videos
         # mask: A boolean tensor of the shape [N, patch_layout's shpae]
         outputs = self.trunk(imgOrVideo, mask=mask)
-        if mask is not None:
-            return self.head(outputs[0][1])
-        else:
-            return self.head(outputs[0])
+        return self.head(outputs)
+  
+
+def _load_checkpoint(model, checkpoint_name, pretrained, progress=True):
+    if pretrained:
+        path = CHECKPOINT_PATHS[checkpoint_name]
+        print(f"Loading {checkpoint_name} from {path}")
+        checkpoint = load_state_dict_from_url(
+            path, progress=progress, map_location="cpu"
+        )
+        missing_keys, unexpected_keys = model.load_state_dict(checkpoint, strict=True)
+        assert len(missing_keys) == 0 and len(unexpected_keys) == 0
+    return model
 
 
-def vit_base_mae_pretraining(ckpt_path=None):
+def vit_base_mae_pretraining(pretrained=True):
 
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
@@ -63,12 +93,9 @@ def vit_base_mae_pretraining(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.0,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -86,9 +113,7 @@ def vit_base_mae_pretraining(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=True,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=True,
         post_encoder_params=None,
@@ -110,13 +135,14 @@ def vit_base_mae_pretraining(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=0.02),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitB_pretrain"
+    )
     return model
 
 
-def vit_base_mae_finetune_ssv2(ckpt_path=None):
+def vit_base_mae_finetune_ssv2(pretrained=True):
 
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
@@ -136,12 +162,9 @@ def vit_base_mae_finetune_ssv2(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.1,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -159,9 +182,7 @@ def vit_base_mae_finetune_ssv2(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=False,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=False,
         post_encoder_params=None,
@@ -175,14 +196,14 @@ def vit_base_mae_finetune_ssv2(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=2.0e-05),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitB_ft_ssv2"
+    )
     return model
 
 
-
-def vit_base_mae_finetune_in1k(ckpt_path=None):
+def vit_base_mae_finetune_in1k(pretrained=True):
 
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
@@ -202,12 +223,9 @@ def vit_base_mae_finetune_in1k(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.1,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -225,9 +243,7 @@ def vit_base_mae_finetune_in1k(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=False,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=False,
         post_encoder_params=None,
@@ -240,14 +256,14 @@ def vit_base_mae_finetune_in1k(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=2.0e-05),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitB_ft_in1k"
+    )
     return model
 
 
-
-def vit_large_mae_pretraining(ckpt_path=None):
+def vit_large_mae_pretraining(pretrained=True):
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
         patch_size=[2, 16, 16],
@@ -266,12 +282,9 @@ def vit_large_mae_pretraining(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.0,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -289,9 +302,7 @@ def vit_large_mae_pretraining(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=True,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=True,
         post_encoder_params=None,
@@ -313,13 +324,14 @@ def vit_large_mae_pretraining(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=0.02),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitL_pretrain"
+    )
     return model
 
 
-def vit_large_mae_finetune_ssv2(ckpt_path=None):
+def vit_large_mae_finetune_ssv2(pretrained=True):
 
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
@@ -339,12 +351,9 @@ def vit_large_mae_finetune_ssv2(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.1,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -362,9 +371,7 @@ def vit_large_mae_finetune_ssv2(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=False,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=False,
         post_encoder_params=None,
@@ -380,14 +387,14 @@ def vit_large_mae_finetune_ssv2(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=0.01),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitL_ft_ssv2"
+    )
     return model
 
 
-
-def vit_large_mae_finetune_in1k(ckpt_path=None):
+def vit_large_mae_finetune_in1k(pretrained=True):
 
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
@@ -407,12 +414,9 @@ def vit_large_mae_finetune_in1k(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.1,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -430,9 +434,7 @@ def vit_large_mae_finetune_in1k(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=False,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=False,
         post_encoder_params=None,
@@ -445,13 +447,14 @@ def vit_large_mae_finetune_in1k(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=2.0e-05),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitL_ft_in1k"
+    )
     return model
 
 
-def vit_huge_mae_pretraining(ckpt_path=None):
+def vit_huge_mae_pretraining(pretrained=True):
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
         patch_size=[2, 14, 14],
@@ -470,12 +473,9 @@ def vit_huge_mae_pretraining(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.0,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -493,9 +493,7 @@ def vit_huge_mae_pretraining(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=True,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=True,
         post_encoder_params=None,
@@ -517,13 +515,14 @@ def vit_huge_mae_pretraining(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=0.02),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitH_pretrain"
+    )
     return model
 
 
-def vit_huge_mae_finetune_ssv2(ckpt_path=None):
+def vit_huge_mae_finetune_ssv2(pretrained=True):
 
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
@@ -543,12 +542,9 @@ def vit_huge_mae_finetune_ssv2(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.1,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -566,9 +562,7 @@ def vit_huge_mae_finetune_ssv2(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=False,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=False,
         post_encoder_params=None,
@@ -584,13 +578,14 @@ def vit_huge_mae_finetune_ssv2(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=0.01),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitH_ft_ssv2"
+    )
     return model
 
 
-def vit_huge_mae_finetune_in1k(ckpt_path=None):
+def vit_huge_mae_finetune_in1k(pretrained=True):
 
     trunk = VisionTransformer(
         img_size=[3, 16, 224, 224],
@@ -610,12 +605,9 @@ def vit_huge_mae_finetune_in1k(ckpt_path=None):
         drop_rate=0.0,
         drop_path_rate=0.1,
         drop_path_type="progressive",
-        force_cast_ln_fp32=False,
         classifier_feature="global_pool",
         use_cls_token=False,
         learnable_pos_embed=False,
-        non_skip_wt=1.0,
-        non_skip_wt_learnable=False,
         layer_scale_type=None,
         layer_scale_init_value=0.1,
         patch_embed_type="generic",
@@ -633,9 +625,7 @@ def vit_huge_mae_finetune_in1k(ckpt_path=None):
         ],
         layer_norm_eps=1e-6,
         masked_image_modeling=False,
-        patch_drop_min_patches=-1,
         patch_drop_max_patches=-1,
-        patch_drop_at_eval=False,
         add_pos_same_dtype=False,
         patch_dropping=False,
         post_encoder_params=None,
@@ -648,7 +638,8 @@ def vit_huge_mae_finetune_in1k(ckpt_path=None):
         init_weight=partial(trunc_normal_, mean=0.0, std=2.0e-05),
     )
 
-    model = OmniMAE(trunk, head) 
-    if ckpt_path is not None:
-        model.load_state_dict(torch.load(ckpt_path))
+    model = OmniMAE(trunk, head)
+    model = _load_checkpoint(
+        model=model, pretrained=pretrained, checkpoint_name="omnimae_vitH_ft_in1k"
+    )
     return model

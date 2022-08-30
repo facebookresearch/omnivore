@@ -1,0 +1,27 @@
+# @package _global_
+
+in1k_train_imgs_path: /checkpoint/imisra/datasets/in1k_disk/train_images_global.npy
+in1k_train_labels_path: /checkpoint/imisra/datasets/in1k_disk/train_labels.npy
+in1k_val_imgs_path: /checkpoint/imisra/datasets/in1k_disk/val_images_global.npy
+in1k_val_labels_path: /checkpoint/imisra/datasets/in1k_disk/val_labels.npy
+in1k_prefix: "" # Use this variable to prepend additional path for the data. Otherwise, leave it empty.
+
+sunrgbd_train_imgs_path:  /checkpoint/kalyanv/data/sunrgbd/train_image_names.npy
+sunrgbd_train_depth_imgs_path:  /checkpoint/kalyanv/data/sunrgbd/train_depth_names.npy
+sunrgbd_train_labels_path: /checkpoint/kalyanv/data/sunrgbd/train_labels.npy
+sunrgbd_val_imgs_path:  /checkpoint/kalyanv/data/sunrgbd/test_image_names.npy
+sunrgbd_val_depth_imgs_path:  /checkpoint/kalyanv/data/sunrgbd/test_depth_names.npy
+sunrgbd_val_labels_path: /checkpoint/kalyanv/data/sunrgbd/test_labels.npy
+sunrgbd_prefix: "/checkpoint/kalyanv/data/sunrgbd/images/" # Use this variable to prepend additional path for the data. Otherwise, leave it empty.
+
+k400_train_vids_path: /checkpoint/rgirdhar/Work/FB/2021/003_JointImVid/Datasets/Kinetics_lowres/400/vidpaths_train.npy
+k400_train_labels_path: /checkpoint/rgirdhar/Work/FB/2021/003_JointImVid/Datasets/Kinetics_lowres/400/labels_train.npy
+k400_val_vids_path: /checkpoint/rgirdhar/Work/FB/2021/003_JointImVid/Datasets/Kinetics_lowres/400/vidpaths_val.npy
+k400_val_labels_path: /checkpoint/rgirdhar/Work/FB/2021/003_JointImVid/Datasets/Kinetics_lowres/400/labels_val.npy
+k400_prefix: "" # Use this variable to prepend additional path for the data. Otherwise, leave it empty.
+
+ssv2_train_vids_path: /checkpoint/rgirdhar/Work/FB/2021/003_JointImVid/Datasets/SSv2/vidpaths_train.npy
+ssv2_train_labels_path: /checkpoint/rgirdhar/Work/FB/2021/003_JointImVid/Datasets/SSv2/labels_train.npy
+ssv2_val_vids_path: /checkpoint/rgirdhar/Work/FB/2021/003_JointImVid/Datasets/SSv2/vidpaths_validation.npy
+ssv2_val_labels_path: /checkpoint/rgirdhar/Work/FB/2021/003_JointImVid/Datasets/SSv2/labels_validation.npy
+ssv2_prefix: "" # Use this variable to prepend additional path for the data. Otherwise, leave it empty.

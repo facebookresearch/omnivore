@@ -30,6 +30,13 @@ This repository contains PyTorch pretrained models, inference examples for the f
 ```
 </details>
 
+</details>
+<details>
+<summary>
+<a href="omnivision/">OmniVision</a> Our training pipeline supporting the multi-modal vision research.[<b>bib</b>]
+</summary>
+</details>
+
 ## Contributing
 We welcome your pull requests! Please see [CONTRIBUTING](CONTRIBUTING.md) and [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md) for more information.
 
