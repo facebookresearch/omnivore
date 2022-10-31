@@ -1,3 +1,4 @@
+# Copyright Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import unittest
 from pathlib import Path
 
