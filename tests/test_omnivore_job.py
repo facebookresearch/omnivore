@@ -1,5 +1,5 @@
 #!/usr/bin/env fbpython
-# (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+# Copyright Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 import subprocess
 import unittest
